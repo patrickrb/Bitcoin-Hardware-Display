@@ -45,17 +45,16 @@ lv_obj_set_style_text_color(ui_LabelSpeed, lv_color_hex(0xFFFFFF), LV_PART_MAIN 
 lv_obj_set_style_text_opa(ui_LabelSpeed, 255, LV_PART_MAIN| LV_STATE_DEFAULT);
 lv_obj_set_style_text_font(ui_LabelSpeed, &lv_font_montserrat_40, LV_PART_MAIN| LV_STATE_DEFAULT);
 
-// Price change container with background
+// Price change container (transparent, no background)
 lv_obj_t * ui_ChangeContainer = lv_obj_create(ui_ScreenHome);
 lv_obj_set_width(ui_ChangeContainer, 150);
 lv_obj_set_height(ui_ChangeContainer, 35);
 lv_obj_set_align(ui_ChangeContainer, LV_ALIGN_CENTER);
 lv_obj_set_y(ui_ChangeContainer, 30);
 lv_obj_clear_flag(ui_ChangeContainer, LV_OBJ_FLAG_SCROLLABLE);
-lv_obj_set_style_bg_color(ui_ChangeContainer, lv_color_hex(0x2D2D2D), LV_PART_MAIN | LV_STATE_DEFAULT);
-lv_obj_set_style_bg_opa(ui_ChangeContainer, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+lv_obj_set_style_bg_opa(ui_ChangeContainer, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
 lv_obj_set_style_border_width(ui_ChangeContainer, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-lv_obj_set_style_radius(ui_ChangeContainer, 17, LV_PART_MAIN | LV_STATE_DEFAULT);
+lv_obj_set_style_pad_all(ui_ChangeContainer, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
 
 // Price change label (inside the container)
 ui_LabelChange = lv_label_create(ui_ChangeContainer);

@@ -212,25 +212,18 @@ void updateBitcoinDisplay() {
     percentChange = ((currentBitcoinPrice - previousBitcoinPrice) / previousBitcoinPrice) * 100.0;
   }
   
-  // Update change label with arrow and percentage
-  const char* arrow = priceIncreasing ? "↗" : "↘";
+  // Update change label with trend indicator and percentage
+  const char* indicator = priceIncreasing ? "UP" : "DN";
   char changeBuffer[32];
-  sprintf(changeBuffer, "%s %+.2f%%", arrow, percentChange);
+  sprintf(changeBuffer, "%s %+.2f%%", indicator, percentChange);
   
   if (ui_LabelChange != NULL) {
     lv_label_set_text(ui_LabelChange, changeBuffer);
     
-    // Update change label and container colors based on trend
+    // Update change label color based on trend (no background)
     lv_color_t trendColor = priceIncreasing ? lv_color_hex(0x00FF88) : lv_color_hex(0xFF4444);
-    lv_color_t bgColor = priceIncreasing ? lv_color_hex(0x1A3D2E) : lv_color_hex(0x3D1A1A);
     
     lv_obj_set_style_text_color(ui_LabelChange, trendColor, LV_PART_MAIN | LV_STATE_DEFAULT);
-    
-    // Update the container background color
-    lv_obj_t * changeContainer = lv_obj_get_parent(ui_LabelChange);
-    if (changeContainer != NULL) {
-      lv_obj_set_style_bg_color(changeContainer, bgColor, LV_PART_MAIN | LV_STATE_DEFAULT);
-    }
   }
   
   Serial.printf("Display updated: %s\n", priceBuffer);
