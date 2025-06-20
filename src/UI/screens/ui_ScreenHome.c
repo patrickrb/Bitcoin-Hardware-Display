@@ -9,10 +9,20 @@ void ui_ScreenHome_screen_init(void)
 {
 ui_ScreenHome = lv_obj_create(NULL);
 lv_obj_clear_flag( ui_ScreenHome, LV_OBJ_FLAG_SCROLLABLE );    /// Flags
-// Set dark gradient background
+
+// Set fallback background color
 lv_obj_set_style_bg_color(ui_ScreenHome, lv_color_hex(0x0A0A0A), LV_PART_MAIN | LV_STATE_DEFAULT);
-lv_obj_set_style_bg_grad_color(ui_ScreenHome, lv_color_hex(0x1A1A1A), LV_PART_MAIN | LV_STATE_DEFAULT);
-lv_obj_set_style_bg_grad_dir(ui_ScreenHome, LV_GRAD_DIR_VER, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+// Bitcoin background image
+lv_obj_t * ui_BackgroundImage = lv_img_create(ui_ScreenHome);
+lv_obj_set_width(ui_BackgroundImage, 800);
+lv_obj_set_height(ui_BackgroundImage, 480);
+lv_obj_set_x(ui_BackgroundImage, 0);
+lv_obj_set_y(ui_BackgroundImage, 0);
+lv_obj_set_align(ui_BackgroundImage, LV_ALIGN_TOP_LEFT);
+lv_img_set_src(ui_BackgroundImage, &ui_img_bitcoin_background);
+lv_obj_clear_flag(ui_BackgroundImage, LV_OBJ_FLAG_SCROLLABLE);
+lv_obj_move_background(ui_BackgroundImage);
 
 // Bitcoin logo (top of screen, centered)
 ui_LabelBitcoin = lv_label_create(ui_ScreenHome);
@@ -34,13 +44,14 @@ lv_obj_set_align(ui_ImgBitcoin, LV_ALIGN_TOP_MID);
 lv_obj_set_y(ui_ImgBitcoin, 10);
 lv_img_set_src(ui_ImgBitcoin, &ui_img_bitcoin_logo);
 
-// Main price display (center of screen)
+// Main price display using absolute positioning to prevent any layout shifts
 ui_LabelSpeed = lv_label_create(ui_ScreenHome);
-lv_obj_set_width( ui_LabelSpeed, LV_SIZE_CONTENT);
+lv_obj_set_width( ui_LabelSpeed, 300);  // Fixed width
 lv_obj_set_height( ui_LabelSpeed, LV_SIZE_CONTENT);
-lv_obj_set_align( ui_LabelSpeed, LV_ALIGN_CENTER );
-lv_obj_set_y(ui_LabelSpeed, -20);
-lv_label_set_text(ui_LabelSpeed,"Loading...");
+lv_obj_set_x( ui_LabelSpeed, 250);  // Absolute X position: (800-300)/2 = 250
+lv_obj_set_y( ui_LabelSpeed, 220);  // Absolute Y position: center - 20px
+lv_label_set_text(ui_LabelSpeed,"  $999,999  ");
+lv_obj_set_style_text_align(ui_LabelSpeed, LV_TEXT_ALIGN_LEFT, LV_PART_MAIN | LV_STATE_DEFAULT);
 lv_obj_set_style_text_color(ui_LabelSpeed, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
 lv_obj_set_style_text_opa(ui_LabelSpeed, 255, LV_PART_MAIN| LV_STATE_DEFAULT);
 lv_obj_set_style_text_font(ui_LabelSpeed, &lv_font_montserrat_40, LV_PART_MAIN| LV_STATE_DEFAULT);
@@ -49,21 +60,23 @@ lv_obj_set_style_text_font(ui_LabelSpeed, &lv_font_montserrat_40, LV_PART_MAIN| 
 lv_obj_t * ui_ChangeContainer = lv_obj_create(ui_ScreenHome);
 lv_obj_set_width(ui_ChangeContainer, 150);
 lv_obj_set_height(ui_ChangeContainer, 35);
-lv_obj_set_align(ui_ChangeContainer, LV_ALIGN_CENTER);
-lv_obj_set_y(ui_ChangeContainer, 30);
+lv_obj_set_x(ui_ChangeContainer, 325);  // Absolute position: (800-150)/2 = 325
+lv_obj_set_y(ui_ChangeContainer, 270);  // Absolute position: center + 30px
 lv_obj_clear_flag(ui_ChangeContainer, LV_OBJ_FLAG_SCROLLABLE);
-lv_obj_set_style_bg_color(ui_ChangeContainer, lv_color_hex(0x2D2D2D), LV_PART_MAIN | LV_STATE_DEFAULT);
+lv_obj_set_style_bg_color(ui_ChangeContainer, lv_color_hex(0x404040), LV_PART_MAIN | LV_STATE_DEFAULT);
 lv_obj_set_style_bg_opa(ui_ChangeContainer, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
 lv_obj_set_style_border_width(ui_ChangeContainer, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
 lv_obj_set_style_radius(ui_ChangeContainer, 17, LV_PART_MAIN | LV_STATE_DEFAULT);
 
 // Price change label (inside the container)
 ui_LabelChange = lv_label_create(ui_ChangeContainer);
-lv_obj_set_width(ui_LabelChange, LV_SIZE_CONTENT);
+lv_obj_set_width(ui_LabelChange, 140);  // Fixed width prevents layout changes
 lv_obj_set_height(ui_LabelChange, LV_SIZE_CONTENT);
-lv_obj_set_align(ui_LabelChange, LV_ALIGN_CENTER);
+lv_obj_set_x(ui_LabelChange, 5);   // Absolute position within container
+lv_obj_set_y(ui_LabelChange, 8);   // Absolute position within container
 lv_label_set_text(ui_LabelChange, "-- --%");
-lv_obj_set_style_text_color(ui_LabelChange, lv_color_hex(0xBBBBBB), LV_PART_MAIN | LV_STATE_DEFAULT);
+lv_obj_set_style_text_align(ui_LabelChange, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);
+lv_obj_set_style_text_color(ui_LabelChange, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
 lv_obj_set_style_text_opa(ui_LabelChange, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
 lv_obj_set_style_text_font(ui_LabelChange, &lv_font_montserrat_14, LV_PART_MAIN | LV_STATE_DEFAULT);
 
@@ -73,7 +86,7 @@ lv_obj_set_width(ui_LabelStatus, LV_SIZE_CONTENT);
 lv_obj_set_height(ui_LabelStatus, LV_SIZE_CONTENT);
 lv_obj_set_align(ui_LabelStatus, LV_ALIGN_BOTTOM_MID);
 lv_obj_set_y(ui_LabelStatus, -30);
-lv_label_set_text(ui_LabelStatus, "Live Price - Connecting...");
+lv_label_set_text(ui_LabelStatus, "Live Bitcoin Price Display");
 lv_obj_set_style_text_color(ui_LabelStatus, lv_color_hex(0x666666), LV_PART_MAIN | LV_STATE_DEFAULT);
 lv_obj_set_style_text_opa(ui_LabelStatus, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
 lv_obj_set_style_text_font(ui_LabelStatus, &lv_font_montserrat_14, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -84,7 +97,7 @@ lv_obj_set_width( ui_ArcSpeed, 10);
 lv_obj_set_height( ui_ArcSpeed, 10);
 lv_obj_set_x( ui_ArcSpeed, -1000); // Move far off screen
 lv_obj_set_y( ui_ArcSpeed, -1000);
-lv_obj_set_align( ui_ArcSpeed, LV_ALIGN_CENTER );
+// No alignment set - using absolute positioning only
 lv_arc_set_range(ui_ArcSpeed, 0,45);
 lv_arc_set_value(ui_ArcSpeed, 22);
 lv_obj_set_style_bg_opa(ui_ArcSpeed, 0, LV_PART_MAIN| LV_STATE_DEFAULT);

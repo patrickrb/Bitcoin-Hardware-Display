@@ -42,6 +42,7 @@ LV_IMG_DECLARE( ui_img_background_420_380_png);   // assets/background_420_380.p
 LV_IMG_DECLARE( ui_img_1926738670);   // assets/black-wifi-icon-32.png
 LV_IMG_DECLARE( ui_img_01_png);   // assets/01.png
 LV_IMG_DECLARE( ui_img_bitcoin_logo);   // Clean Bitcoin logo 48x48
+LV_IMG_DECLARE( ui_img_bitcoin_background);   // Bitcoin background 800x480
 
 
 

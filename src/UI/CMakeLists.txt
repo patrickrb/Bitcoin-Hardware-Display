@@ -9,6 +9,8 @@ SET(SOURCES components/ui_comp_image1.c
     images/ui_img_download_png.c
     images/ui_img_background_420_380_png.c
     images/ui_img_1926738670.c
-    images/ui_img_01_png.c)
+    images/ui_img_01_png.c
+    images/ui_img_bitcoin_background.c
+)
 
 add_library(ui ${SOURCES})

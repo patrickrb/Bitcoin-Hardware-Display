@@ -7,7 +7,7 @@
 static uint32_t screenWidth;
 static uint32_t screenHeight;
 static lv_disp_draw_buf_t draw_buf;
-static lv_color_t disp_draw_buf[800 * 480 / 10];
+static lv_color_t disp_draw_buf[800 * 480 / 10]; // Original buffer size to prevent memory overflow
 static lv_disp_drv_t disp_drv;
 
 // UI
@@ -202,36 +202,38 @@ void updateBitcoinDisplay() {
     sprintf(priceBuffer, "$%d", price);
   }
   
-  // Update main price label (center it properly)
-  lv_label_set_text(ui_LabelSpeed, priceBuffer);
-  lv_obj_set_style_text_color(ui_LabelSpeed, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
+  // Ensure consistent text width to prevent shifting
+  char paddedBuffer[16];
+  sprintf(paddedBuffer, "  %s  ", priceBuffer);
   
-  // Calculate percentage change
-  float percentChange = 0.0;
-  if (previousBitcoinPrice > 0) {
-    percentChange = ((currentBitcoinPrice - previousBitcoinPrice) / previousBitcoinPrice) * 100.0;
-  }
+  lv_label_set_text(ui_LabelSpeed, paddedBuffer);
+  lv_refr_now(lv_disp_get_default());
   
-  // Update change label with arrow and percentage
-  const char* arrow = priceIncreasing ? "↗" : "↘";
-  char changeBuffer[32];
-  sprintf(changeBuffer, "%s %+.2f%%", arrow, percentChange);
+  // Test: Disable ALL LVGL calls in updateBitcoinDisplay to see if the shifting is caused by something else
+  // lv_obj_update_layout(lv_scr_act());
   
-  if (ui_LabelChange != NULL) {
-    lv_label_set_text(ui_LabelChange, changeBuffer);
-    
-    // Update change label and container colors based on trend
-    lv_color_t trendColor = priceIncreasing ? lv_color_hex(0x00FF88) : lv_color_hex(0xFF4444);
-    lv_color_t bgColor = priceIncreasing ? lv_color_hex(0x1A3D2E) : lv_color_hex(0x3D1A1A);
-    
-    lv_obj_set_style_text_color(ui_LabelChange, trendColor, LV_PART_MAIN | LV_STATE_DEFAULT);
-    
-    // Update the container background color
-    lv_obj_t * changeContainer = lv_obj_get_parent(ui_LabelChange);
-    if (changeContainer != NULL) {
-      lv_obj_set_style_bg_color(changeContainer, bgColor, LV_PART_MAIN | LV_STATE_DEFAULT);
-    }
-  }
+  // // Explicitly re-center all elements to counteract any drift
+  // lv_obj_set_align(ui_LabelSpeed, LV_ALIGN_CENTER);
+  // lv_obj_set_y(ui_LabelSpeed, -20);
+  
+  // if (ui_LabelChange != NULL) {
+  //   lv_obj_t * changeContainer = lv_obj_get_parent(ui_LabelChange);
+  //   if (changeContainer != NULL) {
+  //     lv_obj_set_align(changeContainer, LV_ALIGN_CENTER);
+  //     lv_obj_set_y(changeContainer, 30);
+  //   }
+  // }
+  
+  // if (ui_LabelStatus != NULL) {
+  //   lv_obj_set_align(ui_LabelStatus, LV_ALIGN_BOTTOM_MID);
+  //   lv_obj_set_y(ui_LabelStatus, -30);
+  // }
+  
+  // // Re-center top elements as well
+  // if (ui_LabelBitcoin != NULL) {
+  //   lv_obj_set_align(ui_LabelBitcoin, LV_ALIGN_TOP_MID);
+  //   lv_obj_set_y(ui_LabelBitcoin, 60);
+  // }
   
   Serial.printf("Display updated: %s\n", priceBuffer);
 }
@@ -253,26 +255,12 @@ void updateStatusTimestamp() {
   
   char statusBuffer[64];
   
-  if (timeSinceUpdate < 60) {
-    // Show seconds
-    if (timeSinceUpdate == 0) {
-      sprintf(statusBuffer, "Live Price • Updated now");
-    } else if (timeSinceUpdate == 1) {
-      sprintf(statusBuffer, "Live Price • Updated 1s ago");
-    } else {
-      sprintf(statusBuffer, "Live Price • Updated %lus ago", timeSinceUpdate);
-    }
-  } else {
-    // Show minutes
-    unsigned long minutes = timeSinceUpdate / 60;
-    if (minutes == 1) {
-      sprintf(statusBuffer, "Live Price • Updated 1m ago");
-    } else {
-      sprintf(statusBuffer, "Live Price • Updated %lum ago", minutes);
-    }
-  }
+  // Use fixed-length status message to prevent layout shifting
+  sprintf(statusBuffer, "Live Bitcoin Price Display");
   
   lv_label_set_text(ui_LabelStatus, statusBuffer);
+  
+  // Refresh handled in main loop to prevent conflicts
 }
 
 // Fetch Bitcoin price from API
@@ -376,6 +364,9 @@ void fetchBitcoinPrice() {
       }
     } else {
       Serial.println("Check your internet connection and DNS settings");
+      // Show connection error on display with consistent width
+      lv_label_set_text(ui_LabelSpeed, "  No Connection  ");
+      lv_refr_now(lv_disp_get_default());
     }
   }
   
@@ -387,6 +378,7 @@ void lvgl_loop(void *parameter)
   while (true)
   {
     lv_timer_handler();
+    vTaskDelay(pdMS_TO_TICKS(5)); // Add 5ms delay to prevent tight loop
   }
   vTaskDelete(NULL);
 }
@@ -446,6 +438,11 @@ void setup()
   lcd->fillScreen(BLACK);
 
   ui_init();
+  
+  // Force LVGL layout calculation to complete before starting
+  lv_obj_update_layout(lv_scr_act());
+  lv_refr_now(NULL);  // Force immediate refresh
+  
   guiHandler();
   
   // Initialize timestamp tracking
@@ -462,22 +459,30 @@ unsigned long previousMillis = 0;
 void loop()
 {
   unsigned long currentMillis = millis();
+  bool needsRefresh = false;
   
   // Update Bitcoin price every 30 seconds
   if (currentMillis - lastPriceUpdate >= PRICE_UPDATE_INTERVAL) {
     if (WiFi.status() == WL_CONNECTED) {
       fetchBitcoinPrice();
+      needsRefresh = true;
     } else {
       // Try to reconnect WiFi if disconnected
       connectToWiFi();
     }
   }
   
-  // Update status timestamp every second
-  if (currentMillis - lastStatusUpdate >= STATUS_UPDATE_INTERVAL) {
-    updateStatusTimestamp();
-    lastStatusUpdate = currentMillis;
-  }
+  // Disable status updates for now to test minimal version
+  // if (currentMillis - lastStatusUpdate >= STATUS_UPDATE_INTERVAL) {
+  //   updateStatusTimestamp();
+  //   lastStatusUpdate = currentMillis;
+  //   needsRefresh = true;
+  // }
+  
+  // No additional refresh needed - handled in updateBitcoinDisplay
+  // if (needsRefresh) {
+  //   lv_refr_now(lv_disp_get_default());
+  // }
   
   delay(100); // Small delay to prevent excessive CPU usage
 }
